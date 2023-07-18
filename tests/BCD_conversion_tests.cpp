@@ -1,3 +1,5 @@
+#define USE_TESTING_TYPES
+
 #include <gtest/gtest.h>
 #include "./mocks/MockWire.h"
 
@@ -12,5 +14,9 @@ TEST(decToBcd, converts_9){
 }
 
 TEST(decToBcd, converts_10){
-  EXPECT_EQ(RTC.decToBcd(10), 10);
+  EXPECT_EQ(RTC.decToBcd(10), 0b00010000);
+}
+
+TEST(decToBcd, converts_59){
+  EXPECT_EQ(RTC.decToBcd(59), 0b00010000);
 }

@@ -1,8 +1,5 @@
-# include(FetchContent)
-# FetchContent_Declare(
-#   googletest
-#   URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-# )
+
+# add_compile_definitions(USE_TESTING_TYPES)
 
 add_subdirectory("${PROJECT_SOURCE_DIR}/googletest" "googletest")
 add_subdirectory("${PROJECT_SOURCE_DIR}/tests/mocks" "MockWire")
@@ -11,18 +8,11 @@ link_directories("${PROJECT_SOURCE_DIR}/tests/mocks")
 
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-# FetchContent_MakeAvailable(googletest)
 
-# add_executable(
-#   RTC_interface_tests
-#   RTC_interface_tests.cpp
-# )
+# add_compile_definitions(USE_TESTING_TYPES)
 
-# target_link_libraries(
-#   RTC_interface_tests
-#   RTC_interface
-#   GTest::gtest_main
-# )
+# include_directories(RTC_interface PUBLIC "${PROJECT_SOURCE_DIR}/src")
+# link_directories("${PROJECT_SOURCE_DIR}/src")
 
 macro(package_add_test TESTNAME)
     # create an executable in which the tests will be stored
@@ -41,7 +31,6 @@ macro(package_add_test TESTNAME)
 endmacro()
 
 include(GoogleTest)
-# gtest_discover_tests(RTC_interface_tests)
 
 package_add_test(
   RTC_interface_tests
