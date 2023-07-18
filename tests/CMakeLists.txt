@@ -1,5 +1,4 @@
 
-# add_compile_definitions(USE_TESTING_TYPES)
 
 add_subdirectory("${PROJECT_SOURCE_DIR}/googletest" "googletest")
 add_subdirectory("${PROJECT_SOURCE_DIR}/tests/mocks" "MockWire")
@@ -9,11 +8,7 @@ link_directories("${PROJECT_SOURCE_DIR}/tests/mocks")
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-# add_compile_definitions(USE_TESTING_TYPES)
-
-# include_directories(RTC_interface PUBLIC "${PROJECT_SOURCE_DIR}/src")
-# link_directories("${PROJECT_SOURCE_DIR}/src")
-
+# macro copied from https://cliutils.gitlab.io/modern-cmake/chapters/testing/googletest.html
 macro(package_add_test TESTNAME)
     # create an executable in which the tests will be stored
     add_executable(${TESTNAME} ${ARGN})
