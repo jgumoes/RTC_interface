@@ -7,6 +7,8 @@
 
 #ifdef USE_TESTING_TYPES
   #include "testing_types.h"
+#else
+  #include <stdint.h>
 #endif
 
 #define USE_DS3231
@@ -166,7 +168,7 @@ class RTCInterfaceClass{
     /*
      * convets a regular integer to binary-coded decimal
      */
-    byte decToBcd(byte val) { return ( ((val/10) << 4) + (val%10) ); }
+    uint8_t decToBcd(uint8_t val) { return ( ((val/10) << 4) + (val%10) ); }
     
     /*
      * breaks a 2000 epoch timestamp into datetime values
@@ -274,7 +276,7 @@ class RTCInterfaceClass{
      * the time back by up to a minute
      */
     void setTo24hr(){
-      byte temp_buffer;
+      uint8_t temp_buffer;
       transmitByte(0x02);
       Wire.requestFrom(CLOCK_ADDRESS, 1);
       temp_buffer = Wire.read();
@@ -291,7 +293,7 @@ class RTCInterfaceClass{
      * note: device address is set by CLOCK_ADDRESS
      * @return if operation was performed without any errors
      */
-    bool transmitByte(byte registerAddress){
+    bool transmitByte(uint8_t registerAddress){
       Wire.beginTransmission(CLOCK_ADDRESS);
       Wire.write(registerAddress);
       if(Wire.endTransmission() != 0){
@@ -305,7 +307,7 @@ class RTCInterfaceClass{
      * note: device address is set by CLOCK_ADDRESS
      * @return if operation was performed without any errors
      */
-    bool transmit2Bytes(byte registerAddress, byte value){
+    bool transmit2Bytes(uint8_t registerAddress, uint8_t value){
       Wire.beginTransmission(CLOCK_ADDRESS);
       Wire.write(registerAddress);
       Wire.write(value);
