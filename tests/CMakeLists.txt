@@ -37,3 +37,7 @@ package_add_test(
   BCD_conversion_tests.cpp
 )
 
+package_add_test(
+  getLocalTimestamp_tests
+  getLocalTimestamp_tests.cpp
+)

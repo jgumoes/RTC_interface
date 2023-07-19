@@ -14,17 +14,21 @@ MockWire::MockWire(uint8_t seconds, uint8_t minutes, uint8_t hours,
 
 MockWire::MockWire(){ MockWire(0, 0, 0, 0, 0, 0, 0); }
 
-// byte decToBcd(byte val) { return ( ((val/10) << 4) + (val%10) ); }
+/*
+ * This method has been copied from RTC_interface, where
+ * it has passed its tests.
+ */
+uint8_t decToBcd(uint8_t val) { return ( ((val/10) << 4) + (val%10) ); }
 
-// void MockWire::convertToBcd(){
-//   seconds = decToBcd(seconds);
-//   minutes = decToBcd(minutes);
-//   hours = decToBcd(hours);
-//   dayOfWeek = decToBcd(dayOfWeek);
-//   date = decToBcd(date);
-//   month = decToBcd(month);
-//   years = decToBcd(years);
-// }
+void MockWire::convertToBcd(){
+  buffer[0] = decToBcd(buffer[0]);
+  buffer[1] = decToBcd(buffer[1]);
+  buffer[2] = decToBcd(buffer[2]);
+  buffer[3] = decToBcd(buffer[3]);
+  buffer[4] = decToBcd(buffer[4]);
+  buffer[5] = decToBcd(buffer[5]);
+  buffer[6] = decToBcd(buffer[6]);
+}
 
 uint8_t MockWire::requestFrom(int address, int size){
   if(size >= 13){ return false; }

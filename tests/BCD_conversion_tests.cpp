@@ -1,5 +1,3 @@
-#define USE_TESTING_TYPES
-
 #include <gtest/gtest.h>
 #include "./mocks/MockWire.h"
 

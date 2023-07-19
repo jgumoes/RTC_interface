@@ -34,7 +34,7 @@ public:
   bool wireAddressSet = false;
   bool registerAddressSet = false;
 
-  // void convertToBcd();
+  void convertToBcd();
 
   /*
    * returns true if size is less than 13, otherwise false
