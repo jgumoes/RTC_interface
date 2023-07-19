@@ -10,6 +10,6 @@ TEST(CLOCK_ADDRESS_test, BasicAssertions){
   EXPECT_EQ(CLOCK_ADDRESS, 0x68);
 }
 
-// TEST(fetchTime, returns_the_correct_time){
+// TEST(fetchDatetime, returns_the_correct_time){
 //   MockWire wire = MockWire()
 // }

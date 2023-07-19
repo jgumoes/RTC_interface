@@ -1,6 +1,6 @@
 message(STATUS "BUILD_TESTS is switched ${BUILD_TESTS}")
 if(BUILD_TESTS)
-  add_compile_definitions(USE_TESTING_TYPES)
+  add_compile_definitions(USE_BCD_TIME)
 endif()
 
 add_library(RTC_interface RTC_interface.cpp)

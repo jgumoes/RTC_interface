@@ -2,26 +2,27 @@
 #ifndef RTC_interface_h
 #define RTC_interface_h
 
-// #include <Arduino.h>
-// #include <Wire.h>
-
 #include <stdint.h>
 
-#define USE_DS3231
+#define USE_DS3231  // TODO: remove once more chipsets are supported
 
 // define which RTC chipset is being used
 #ifdef USE_DS3231
   #define CLOCK_ADDRESS 0x68
 #endif
 
+#define SECONDS_BETWEEN_1970_2000 946684800;
+
+#define BCDMask 0b00001111
+
 struct DateTimeStruct{
-  uint16_t _seconds;
-  uint16_t _minutes;
-  uint16_t _hours;
-  uint16_t _day;      // day of the week
-  uint16_t _date;
-  uint16_t _month;
-  uint16_t _years;
+  uint16_t seconds;
+  uint16_t minutes;
+  uint16_t hours;
+  uint16_t dayOfWeek;
+  uint16_t date;
+  uint16_t month;
+  uint16_t years;
   bool readReady; // if true, struct is suitable for reading
 };
 
@@ -33,6 +34,31 @@ struct PendingUpdatesStruct{
   bool timestampPending = false;
   uint32_t timestamp = 0; // incoming timestamps will always be UTC as per BLE DTS specification
 };
+
+#ifdef USE_BCD_TIME
+  struct BCDTimeStruct{
+    uint8_t seconds_1;
+    uint8_t seconds_10;
+    uint8_t minutes_1;
+    uint8_t minutes_10;
+    uint8_t hours_1;
+    uint8_t hours_10;
+    bool readReady;
+  };
+
+  struct BCDDateStruct
+  {
+    uint8_t dayOfWeek;
+    uint8_t date_1;
+    uint8_t date_10;
+    uint8_t month_1;
+    uint8_t month_10;
+    uint8_t year_1;
+    uint8_t year_10;
+    bool readReady;
+  };
+  
+#endif
 
 /*
  * Handles interfacing with the RTC.
@@ -55,23 +81,27 @@ class RTCInterfaceClass{
     DateTimeStruct datetime;
     const uint8_t monthDays[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
 
+#ifdef USE_BCD_TIME
+    BCDTimeStruct BCDTime;
+    BCDDateStruct BCDDate;
+#endif
     /*
      * Returns the local timestamp in seconds since the 2000 epoch
      */
     uint32_t getLocalTimestamp(){
-      fetchTime();
+      fetchDatetime();
       datetime.readReady = true;
       // TODO: can this be improved?
-      localTimestamp = (datetime._years * 365) + ((datetime._years + 3)/4);      // years to days
+      localTimestamp = (datetime.years * 365) + ((datetime.years + 3)/4);      // years to days
 
-      uint16_t days = datetime._date - 1 + (!(datetime._years % 4) && (datetime._month > 2)); // remove a day to 0 index the days, but
+      uint16_t days = datetime.date - 1 + (!(datetime.years % 4) && (datetime.month > 2)); // remove a day to 0 index the days, but
                                                                                               // add a day if it's a leap year and after Feb
-      for(int i = 0; i < datetime._month - 1; i++){ days += monthDays[i];}
+      for(int i = 0; i < datetime.month - 1; i++){ days += monthDays[i];}
 
       localTimestamp = (localTimestamp + days) * 24;      // days to hours
-      localTimestamp = (localTimestamp + datetime._hours) * 60;     // hours to minutes
-      localTimestamp = (localTimestamp + datetime._minutes) * 60;   // minutes to seconds
-      localTimestamp += datetime._seconds;                          // add the seconds
+      localTimestamp = (localTimestamp + datetime.hours) * 60;     // hours to minutes
+      localTimestamp = (localTimestamp + datetime.minutes) * 60;   // minutes to seconds
+      localTimestamp += datetime.seconds;                          // add the seconds
 
       return localTimestamp;
     }
@@ -81,6 +111,11 @@ class RTCInterfaceClass{
      */
     uint32_t getUTCTimestamp(){
       return getLocalTimestamp() - _timeZoneSecs - _DSTOffsetSecs;
+    }
+
+    DateTimeStruct getDatetime(){
+      fetchDatetime();
+      return datetime;
     }
 
     /*
@@ -173,42 +208,90 @@ class RTCInterfaceClass{
     void convertLocalTimestamp(uint32_t time){
       datetime.readReady = false;
       resetDatetime();
-      datetime._seconds = time % 60;   // i.e. divide by number of minutes and take remainder
+      datetime.seconds = time % 60;   // i.e. divide by number of minutes and take remainder
       time /= 60;             // time is now in minutes
-      datetime._minutes = time % 60;   // i.e. divide by number of hours and take remainder
+      datetime.minutes = time % 60;   // i.e. divide by number of hours and take remainder
       time /= 60;             // time is now in hours
-      datetime._hours = time % 24;     // i.e. divide by number of days and take remainder
+      datetime.hours = time % 24;     // i.e. divide by number of days and take remainder
       time /= 24;             // time is now in days since 1/1/2000
-      datetime._day = time % 7;
-      datetime._day += 7 * !datetime._day;  // if day is 0, set it to 7
-      datetime._years = ((4 * time) / 1461);
-      time -= (datetime._years * 365.25) - 1;   // time is now in day of the year
+      datetime.dayOfWeek = time % 7;
+      datetime.dayOfWeek += 7 * !datetime.dayOfWeek;  // if day is 0, set it to 7
+      datetime.years = ((4 * time) / 1461);
+      time -= (datetime.years * 365.25) - 1;   // time is now in day of the year
                                                 // +1 because day of the year isn't zero-indexed
 
-      int leapDay = (!(datetime._years % 4) && (time > 59)); // knock of a day if its a leap year and after Feb 29
+      int leapDay = (!(datetime.years % 4) && (time > 59)); // knock of a day if its a leap year and after Feb 29
       time -= leapDay;
       int i = 0;
       while (time > monthDays[i]){
           time -= monthDays[i];
           i++;
       }
-      datetime._date = time + leapDay;
-      datetime._month = i + 1;
+      datetime.date = time + leapDay;
+      datetime.month = i + 1;
     }
 
     /*
      * resets all stored values before performing read/write operations
      */
     void resetDatetime(){
-      datetime._date = 0;
-      datetime._day = 0;
-      datetime._hours = 0;
-      datetime._minutes = 0;
-      datetime._month = 0;
-      datetime._seconds = 0;
-      datetime._years = 0;
+      datetime.date = 0;
+      datetime.dayOfWeek = 0;
+      datetime.hours = 0;
+      datetime.minutes = 0;
+      datetime.month = 0;
+      datetime.seconds = 0;
+      datetime.years = 0;
     }
 
+#ifdef USE_BCD_TIME
+    BCDTimeStruct getBCDTime(){
+      BCDTime.readReady = false;
+      transmitByte(0);
+
+      Wire.requestFrom(CLOCK_ADDRESS, 3);
+      uint8_t seconds = Wire.read();
+      uint8_t minutes = Wire.read();
+      uint8_t hours = Wire.read();
+
+      uint8_t hoursMask = 0b00111111;
+      if(hours & 0b01000000){
+        // if mode is 12 hours, bit 5 is am/pm and should be ignored
+        hoursMask = (hoursMask >> 1);
+      }
+      hours &= hoursMask; // ignore bit 6 (12/24 hr)
+
+      BCDTime.seconds_1 = seconds & BCDMask;
+      BCDTime.seconds_10 = (seconds >> 4) & BCDMask;
+      BCDTime.minutes_1 = minutes & BCDMask;
+      BCDTime.minutes_10 = (minutes >> 4) & BCDMask;
+      BCDTime.hours_1 = hours & BCDMask;
+      BCDTime.hours_10 = (hours >> 4) & 1;
+      BCDTime.readReady = true;
+      return BCDTime;
+    }
+
+    BCDDateStruct getBCDDate(){
+      BCDDate.readReady = false;
+      transmitByte(0x03);
+
+      Wire.requestFrom(CLOCK_ADDRESS, 4);
+      uint8_t dayOfWeek = Wire.read();
+      uint8_t date = Wire.read();
+      uint8_t month = Wire.read() & 0b01111111; // we don't need the century bit
+      uint8_t year = Wire.read();
+      
+      BCDDate.dayOfWeek = dayOfWeek;
+      BCDDate.date_1 = date & BCDMask;
+      BCDDate.date_10 = (date >> 4) & BCDMask;
+      BCDDate.month_1 = month & BCDMask;
+      BCDDate.month_10 = (month >> 4) & BCDMask;
+      BCDDate.year_1 = year & BCDMask;
+      BCDDate.year_10 = (year >> 4) & BCDMask;
+      BCDDate.readReady = true;
+      return BCDDate;
+    }
+#endif
 
   private:
     int32_t _timeZoneSecs = 0;    // timezone offset in seconds
@@ -217,18 +300,18 @@ class RTCInterfaceClass{
     /*
      * Fetchs the time from the RTC chipset, and unpacks it into a datetime object
      */
-    void fetchTime(){
+    void fetchDatetime(){
       resetDatetime();
       transmitByte(0);
 
       Wire.requestFrom(CLOCK_ADDRESS, 7);
-      datetime._seconds = bcd2bin(Wire.read() & 0x7F);
-      datetime._minutes = bcd2bin(Wire.read());
-      datetime._hours = bcd2bin(Wire.read());
-      datetime._day = bcd2bin(Wire.read());
-      datetime._date = bcd2bin(Wire.read());
-      datetime._month = bcd2bin(Wire.read());
-      datetime._years = bcd2bin(Wire.read()); // years since midnight 2000
+      datetime.seconds = bcd2bin(Wire.read());
+      datetime.minutes = bcd2bin(Wire.read());
+      datetime.hours = bcd2bin(Wire.read() & 0b00011111);
+      datetime.dayOfWeek = bcd2bin(Wire.read());
+      datetime.date = bcd2bin(Wire.read());
+      datetime.month = bcd2bin(Wire.read() & 0b00011111);
+      datetime.years = bcd2bin(Wire.read()); // years since midnight 2000
     }
 
     uint32_t localTimestamp;
@@ -254,13 +337,13 @@ class RTCInterfaceClass{
     bool updateLocalTimestamp(uint32_t time){
       bool anyErrors = 0;
       convertLocalTimestamp(time);
-      anyErrors |= !transmit2Bytes(0x00, decToBcd(datetime._seconds));
-      anyErrors |= !transmit2Bytes(0x01, decToBcd(datetime._minutes));
-      anyErrors |= !transmit2Bytes(0x02, decToBcd(datetime._hours));
-      anyErrors |= !transmit2Bytes(0x03, datetime._day);
-      anyErrors |= !transmit2Bytes(0x04, decToBcd(datetime._date));
-      anyErrors |= !transmit2Bytes(0x05, decToBcd(datetime._month));
-      anyErrors |= !transmit2Bytes(0x06, decToBcd(datetime._years));
+      anyErrors |= !transmit2Bytes(0x00, decToBcd(datetime.seconds));
+      anyErrors |= !transmit2Bytes(0x01, decToBcd(datetime.minutes));
+      anyErrors |= !transmit2Bytes(0x02, decToBcd(datetime.hours));
+      anyErrors |= !transmit2Bytes(0x03, datetime.dayOfWeek);
+      anyErrors |= !transmit2Bytes(0x04, decToBcd(datetime.date));
+      anyErrors |= !transmit2Bytes(0x05, decToBcd(datetime.month));
+      anyErrors |= !transmit2Bytes(0x06, decToBcd(datetime.years));
 
       return !anyErrors;
     }
@@ -272,6 +355,7 @@ class RTCInterfaceClass{
      * the time back by up to a minute
      */
     void setTo24hr(){
+      // TODO: there should be an internal check to make sure time doesn't go backwards
       uint8_t temp_buffer;
       transmitByte(0x02);
       Wire.requestFrom(CLOCK_ADDRESS, 1);
