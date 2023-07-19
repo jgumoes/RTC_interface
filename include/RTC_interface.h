@@ -5,11 +5,7 @@
 // #include <Arduino.h>
 // #include <Wire.h>
 
-#ifdef USE_TESTING_TYPES
-  #include "testing_types.h"
-#else
-  #include <stdint.h>
-#endif
+#include <stdint.h>
 
 #define USE_DS3231
 

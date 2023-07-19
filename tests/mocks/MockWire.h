@@ -1,7 +1,7 @@
 #ifndef MOCKWIRE_H
 #define MOCKWIRE_H
 
-#include "testing_types.h"
+#include <stdint.h>
 
 class MockWire
 {
