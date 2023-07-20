@@ -4,57 +4,29 @@
 #define USE_DS3231
 #include "RTC_interface.h"
 
-TEST(getLocalTimestamp_gets_the_correct_timestamp, at_the_beginning_of_time){
-  MockWire wire = MockWire(0, 0, 0, 6, 1, 1, 0);  // set to midnight, 1/1/2000
-  RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire);
-  EXPECT_EQ(RTC.getLocalTimestamp(), 0);
+#include <iostream>
+
+#define QUICKTEST(testName, expectedResult, seconds, minutes, hours, dayOfWeek, date, month, years)TEST(getLocalTimestamp_gets_the_correct_timestamp, testName){ \
+  MockWire wire = MockWire(seconds, minutes, hours, dayOfWeek, date, month, years); \
+  wire.convertToBcd(); \
+  std::cout << "wire mock mockBuffer:"; \
+  for(int i = 0; i < 7; i++){ std::cout << static_cast<int>(wire.mockBuffer[i]) << std::endl;} \
+  RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire); \
+  EXPECT_EQ(RTC.getLocalTimestamp(), expectedResult); \
 }
 
-TEST(getLocalTimestamp_gets_the_correct_timestamp, during_british_winter_time_2023){
-  MockWire wire = MockWire(2, 59, 10, 2, 7, 2, 23);
-  wire.convertToBcd();
-  RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire);
-  EXPECT_EQ(RTC.getLocalTimestamp(), 729082742);
-}
+QUICKTEST(at_the_beginning_of_time, 0, 0, 0, 0, 6, 1, 1, 0)
 
-TEST(getLocalTimestamp_gets_the_correct_timestamp, during_british_summer_time_2023){
-  MockWire wire = MockWire(21, 13, 17, 3, 19, 7, 23);
-  wire.convertToBcd();
-  RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire);
-  EXPECT_EQ(RTC.getLocalTimestamp(), 743102001);
-}
+QUICKTEST(during_british_winter_time_2023, 729082742, 2, 59, 10, 2, 7, 2, 23)
 
-TEST(getLocalTimestamp_gets_the_correct_timestamp, feb_28_2023){
-  MockWire wire = MockWire(0, 58, 18, 2, 28, 2, 23);
-  wire.convertToBcd();
-  RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire);
-  EXPECT_EQ(RTC.getLocalTimestamp(), 730925880);
-}
+QUICKTEST(during_british_summer_time_2023, 743102001, 21, 13, 17, 3, 19, 7, 23)
 
-TEST(getLocalTimestamp_gets_the_correct_timestamp, mar_1_2023){
-  MockWire wire = MockWire(13, 45, 17, 3, 1, 3, 23);
-  wire.convertToBcd();
-  RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire);
-  EXPECT_EQ(RTC.getLocalTimestamp(), 731007913);
-}
+QUICKTEST(feb_28_2023, 730925880, 0, 58, 18, 2, 28, 2, 23)
 
-TEST(getLocalTimestamp_gets_the_correct_timestamp, feb_28_2024){
-  MockWire wire = MockWire(0, 58, 18, 3, 28, 2, 24);
-  wire.convertToBcd();
-  RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire);
-  EXPECT_EQ(RTC.getLocalTimestamp(), 762461880);
-}
+QUICKTEST(mar_1_2023, 731007913, 13, 45, 17, 3, 1, 3, 23)
 
-TEST(getLocalTimestamp_gets_the_correct_timestamp, feb_29_2024){
-  MockWire wire = MockWire(0, 58, 18, 4, 29, 2, 24);
-  wire.convertToBcd();
-  RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire);
-  EXPECT_EQ(RTC.getLocalTimestamp(), 762548280);
-}
+QUICKTEST(feb_28_2024, 762461880, 0, 58, 18, 3, 28, 2, 24)
 
-TEST(getLocalTimestamp_gets_the_correct_timestamp, mar_1_2024){
-  MockWire wire = MockWire(13, 45, 17, 5, 1, 3, 24);
-  wire.convertToBcd();
-  RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire);
-  EXPECT_EQ(RTC.getLocalTimestamp(), 762630313);
-}
+QUICKTEST(feb_29_2024, 762548280, 0, 58, 18, 4, 29, 2, 24)
+
+QUICKTEST(mar_1_2024, 762630313, 13, 45, 17, 5, 1, 3, 24)
