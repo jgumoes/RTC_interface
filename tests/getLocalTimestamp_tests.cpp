@@ -4,13 +4,12 @@
 #define USE_DS3231
 #include "RTC_interface.h"
 
-#include <iostream>
+#include "helpers.h"
 
 #define QUICKTEST(testName, expectedResult, seconds, minutes, hours, dayOfWeek, date, month, years)TEST(getLocalTimestamp_gets_the_correct_timestamp, testName){ \
   MockWire wire = MockWire(seconds, minutes, hours, dayOfWeek, date, month, years); \
   wire.convertToBcd(); \
-  std::cout << "wire mock mockBuffer:"; \
-  for(int i = 0; i < 7; i++){ std::cout << static_cast<int>(wire.mockBuffer[i]) << std::endl;} \
+  PRINT_ARRAY("wire mock mockBuffer", wire.mockBuffer, 7); \
   RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire); \
   EXPECT_EQ(RTC.getLocalTimestamp(), expectedResult); \
 }

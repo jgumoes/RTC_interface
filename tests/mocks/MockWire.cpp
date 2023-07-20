@@ -1,4 +1,5 @@
 #include "MockWire.h"
+#include "../helpers.h"
 
 MockWire::MockWire(uint8_t seconds, uint8_t minutes, uint8_t hours,
     uint8_t dayOfWeek, uint8_t date, uint8_t month, uint8_t years)
@@ -17,20 +18,14 @@ MockWire::MockWire(uint8_t seconds, uint8_t minutes, uint8_t hours,
 
 MockWire::MockWire(){ MockWire(0, 0, 0, 0, 0, 0, 0); }
 
-/*
- * This method has been copied from RTC_interface, where
- * it has passed its tests.
- */
-uint8_t decToBcd(uint8_t val) { return ( ((val/10) << 4) + (val%10) ); }
-
 void MockWire::convertToBcd(){
-  mockBuffer[0] = decToBcd(mockBuffer[0]);
-  mockBuffer[1] = decToBcd(mockBuffer[1]);
-  mockBuffer[2] = decToBcd(mockBuffer[2]);
-  mockBuffer[3] = decToBcd(mockBuffer[3]);
-  mockBuffer[4] = decToBcd(mockBuffer[4]);
-  mockBuffer[5] = decToBcd(mockBuffer[5]);
-  mockBuffer[6] = decToBcd(mockBuffer[6]);
+  mockBuffer[0] = AS_BCD(mockBuffer[0]);
+  mockBuffer[1] = AS_BCD(mockBuffer[1]);
+  mockBuffer[2] = AS_BCD(mockBuffer[2]);
+  mockBuffer[3] = AS_BCD(mockBuffer[3]);
+  mockBuffer[4] = AS_BCD(mockBuffer[4]);
+  mockBuffer[5] = AS_BCD(mockBuffer[5]);
+  mockBuffer[6] = AS_BCD(mockBuffer[6]);
 }
 
 uint8_t MockWire::requestFrom(int address, int size){

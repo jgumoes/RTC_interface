@@ -41,6 +41,4 @@ public:
   
 };
 
-uint8_t decToBcd(uint8_t val);
-
 #endif

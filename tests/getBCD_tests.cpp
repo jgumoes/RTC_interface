@@ -7,39 +7,35 @@
 #define USE_BCD_TIME
 #include "RTC_interface.h"
 
-#define ONES(decimal) (decimal % 10)
-#define TENS(decimal) (decimal / 10)
-
-#define AS_BCD(decimal) (TENS(decimal) << 4) | ONES(decimal)
+#include "helpers.h"
 
 #define QUICKTEST(test_name_var, seconds, minutes, hours, dayOfWeekVal, date, month, year) TEST(getBCDX_gets_the_correct_time_and_date, test_name_var){ \
   MockWire wire = MockWire(AS_BCD(seconds), AS_BCD(minutes), AS_BCD(hours), AS_BCD(dayOfWeekVal), AS_BCD(date), AS_BCD(month), AS_BCD(year)); \
   RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire); \
   BCDTimeStruct bcdTime = RTC.getBCDTime(); \
-  std::cout << "seconds_1:" << static_cast<int>(bcdTime.seconds_1) << std::endl;\
-  std::cout << "seconds_10:" << static_cast<int>(bcdTime.seconds_10) << std::endl;\
-  std::cout << "minutes_1:" << static_cast<int>(bcdTime.minutes_1) << std::endl;\
-  std::cout << "minutes_10:" << static_cast<int>(bcdTime.minutes_10) << std::endl;\
-  std::cout << "hours_1:" << static_cast<int>(bcdTime.hours_1) << std::endl;\
-  std::cout << "hours_10:" << static_cast<int>(bcdTime.hours_10) << std::endl;\
-  std::cout << "wire mock mockBuffer:";\
-  for(int i = 0; i < 7; i++){ std::cout << static_cast<int>(wire.mockBuffer[i]) << std::endl;}\
+  PRINT_AS_INT("seconds_1", bcdTime.seconds_1)\
+  PRINT_AS_INT("seconds_10", bcdTime.seconds_10)\
+  PRINT_AS_INT("minutes_1", bcdTime.minutes_1)\
+  PRINT_AS_INT("minutes_10", bcdTime.minutes_10)\
+  PRINT_AS_INT("hours_1", bcdTime.hours_1)\
+  PRINT_AS_INT("hours_10", bcdTime.hours_10)\
+  PRINT_ARRAY("wire mock mockBuffer", wire.mockBuffer, 7)\
 \
-  EXPECT_EQ(static_cast<int>(bcdTime.seconds_1), ONES(seconds)); \
-  EXPECT_EQ(static_cast<int>(bcdTime.seconds_10), TENS(seconds)); \
-  EXPECT_EQ(static_cast<int>(bcdTime.minutes_1), ONES(minutes)); \
-  EXPECT_EQ(static_cast<int>(bcdTime.minutes_10), TENS(minutes)); \
-  EXPECT_EQ(static_cast<int>(bcdTime.hours_1), ONES(hours)); \
-  EXPECT_EQ(static_cast<int>(bcdTime.hours_10), TENS(hours)); \
+  EXPECT_EQ(bcdTime.seconds_1, ONES(seconds)); \
+  EXPECT_EQ(bcdTime.seconds_10, TENS(seconds)); \
+  EXPECT_EQ(bcdTime.minutes_1, ONES(minutes)); \
+  EXPECT_EQ(bcdTime.minutes_10, TENS(minutes)); \
+  EXPECT_EQ(bcdTime.hours_1, ONES(hours)); \
+  EXPECT_EQ(bcdTime.hours_10, TENS(hours)); \
  \
   BCDDateStruct bcdDate = RTC.getBCDDate(); \
-  std::cout << "dayOfWeek: " << static_cast<int>(bcdDate.dayOfWeek) << std::endl;\
-  std::cout << "date_1: " << static_cast<int>(bcdDate.date_1) << std::endl;\
-  std::cout << "date_10: " << static_cast<int>(bcdDate.date_10) << std::endl;\
-  std::cout << "month_1: " << static_cast<int>(bcdDate.month_1) << std::endl;\
-  std::cout << "month_10: " << static_cast<int>(bcdDate.month_10) << std::endl;\
-  std::cout << "year_1: " << static_cast<int>(bcdDate.year_1) << std::endl;\
-  std::cout << "year_10: " << static_cast<int>(bcdDate.year_10) << std::endl;\
+  PRINT_AS_INT("dayOfWeek", bcdDate.dayOfWeek)\
+  PRINT_AS_INT("date_1", bcdDate.date_1)\
+  PRINT_AS_INT("date_10", bcdDate.date_10)\
+  PRINT_AS_INT("month_1", bcdDate.month_1)\
+  PRINT_AS_INT("month_10", bcdDate.month_10)\
+  PRINT_AS_INT("year_1", bcdDate.year_1)\
+  PRINT_AS_INT("year_10", bcdDate.year_10)\
   EXPECT_EQ(bcdDate.dayOfWeek, dayOfWeekVal); \
   EXPECT_EQ(bcdDate.date_1, ONES(date)); \
   EXPECT_EQ(bcdDate.date_10, TENS(date)); \
