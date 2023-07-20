@@ -41,3 +41,8 @@ package_add_test(
   getLocalTimestamp_tests
   getLocalTimestamp_tests.cpp
 )
+
+package_add_test(
+  getBCD_tests
+  getBCD_tests.cpp
+)

@@ -16,13 +16,13 @@
 #define BCDMask 0b00001111
 
 struct DateTimeStruct{
-  uint16_t seconds;
-  uint16_t minutes;
-  uint16_t hours;
-  uint16_t dayOfWeek;
-  uint16_t date;
-  uint16_t month;
-  uint16_t years;
+  uint8_t seconds;
+  uint8_t minutes;
+  uint8_t hours;
+  uint8_t dayOfWeek;
+  uint8_t date;
+  uint8_t month;
+  uint8_t years;
   bool readReady; // if true, struct is suitable for reading
 };
 
@@ -200,36 +200,6 @@ class RTCInterfaceClass{
      * convets a regular integer to binary-coded decimal
      */
     uint8_t decToBcd(uint8_t val) { return ( ((val/10) << 4) + (val%10) ); }
-    
-    /*
-     * breaks a 2000 epoch timestamp into datetime values
-     * @param time local timestamp in seconds
-     */
-    void convertLocalTimestamp(uint32_t time){
-      datetime.readReady = false;
-      resetDatetime();
-      datetime.seconds = time % 60;   // i.e. divide by number of minutes and take remainder
-      time /= 60;             // time is now in minutes
-      datetime.minutes = time % 60;   // i.e. divide by number of hours and take remainder
-      time /= 60;             // time is now in hours
-      datetime.hours = time % 24;     // i.e. divide by number of days and take remainder
-      time /= 24;             // time is now in days since 1/1/2000
-      datetime.dayOfWeek = time % 7;
-      datetime.dayOfWeek += 7 * !datetime.dayOfWeek;  // if day is 0, set it to 7
-      datetime.years = ((4 * time) / 1461);
-      time -= (datetime.years * 365.25) - 1;   // time is now in day of the year
-                                                // +1 because day of the year isn't zero-indexed
-
-      int leapDay = (!(datetime.years % 4) && (time > 59)); // knock of a day if its a leap year and after Feb 29
-      time -= leapDay;
-      int i = 0;
-      while (time > monthDays[i]){
-          time -= monthDays[i];
-          i++;
-      }
-      datetime.date = time + leapDay;
-      datetime.month = i + 1;
-    }
 
     /*
      * resets all stored values before performing read/write operations
@@ -330,6 +300,36 @@ class RTCInterfaceClass{
     }
 
     /*
+     * breaks a 2000 epoch timestamp into datetime values
+     * @param time local timestamp in seconds
+     */
+    void convertLocalTimestamp(uint32_t time){
+      datetime.readReady = false;
+      resetDatetime();
+      datetime.seconds = time % 60;   // i.e. divide by number of minutes and take remainder
+      time /= 60;             // time is now in minutes
+      datetime.minutes = time % 60;   // i.e. divide by number of hours and take remainder
+      time /= 60;             // time is now in hours
+      datetime.hours = time % 24;     // i.e. divide by number of days and take remainder
+      time /= 24;             // time is now in days since 1/1/2000
+      datetime.dayOfWeek = time % 7;
+      datetime.dayOfWeek += 7 * !datetime.dayOfWeek;  // if day is 0, set it to 7
+      datetime.years = ((4 * time) / 1461);
+      time -= (datetime.years * 365.25) - 1;   // time is now in day of the year
+                                                // +1 because day of the year isn't zero-indexed
+
+      int leapDay = (!(datetime.years % 4) && (time > 59)); // knock of a day if its a leap year and after Feb 29
+      time -= leapDay;
+      int i = 0;
+      while (time > monthDays[i]){
+          time -= monthDays[i];
+          i++;
+      }
+      datetime.date = time + leapDay;
+      datetime.month = i + 1;
+    }
+
+    /*
      * Writes a local timestamp to the RTC chip.
      * @param time local timestamp in seconds
      * @return if operation was performed without any errors
@@ -398,5 +398,4 @@ class RTCInterfaceClass{
     }
 };
 
-// extern RTCInterfaceClass RTCInterface;
 #endif
