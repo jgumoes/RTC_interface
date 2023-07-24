@@ -18,5 +18,3 @@
 */
 
 #include "RTC_interface.h"
-
-// RTCInterfaceClass RTCInterface = RTCInterfaceClass();
