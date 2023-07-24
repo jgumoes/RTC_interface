@@ -27,10 +27,10 @@
 template <typename WireClassDependancy, typename ConfigManagerDependancy>
 class RTCInterfaceClass{
   public:
-    WireClassDependancy Wire;
-    ConfigManagerDependancy ConfigManager;
+    WireClassDependancy& Wire;
+    ConfigManagerDependancy& ConfigManager;
  
-    RTCInterfaceClass(WireClassDependancy WireClass, ConfigManagerDependancy ConfigManagerClass)
+    RTCInterfaceClass(WireClassDependancy& WireClass, ConfigManagerDependancy& ConfigManagerClass)
       : Wire(WireClass), ConfigManager(ConfigManagerClass) {
       // Wire = WireClass;
       // ConfigManager = ConfigManagerClass;
