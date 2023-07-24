@@ -35,7 +35,13 @@ struct PendingUpdatesStruct{
   uint32_t timestamp = 0; // incoming timestamps will always be UTC as per BLE DTS specification
 };
 
-#ifdef USE_BCD_TIME
+// holds the config values
+struct RTCConfigsStruct{
+   int32_t timezone = 0;
+   uint16_t DST = 0;
+};
+
+#ifdef USE_BCD_TIME // don't need this in the progmem if we're not going to use it
   struct BCDTimeStruct{
     uint8_t seconds_1;
     uint8_t seconds_10;
@@ -372,24 +378,18 @@ class RTCInterfaceClass{
      * in a projects lifetime.
      */
     void setTo24hr(){
-      uint8_t temp_buffer;
-
-      transmitByte(0x02);
-      Wire.requestFrom(CLOCK_ADDRESS, 1);
-      temp_buffer = Wire.read();
+      uint8_t hours_register;
+      fetchDatetime();  // get the time right now
+      hours_register = decToBcd(datetime.hours);  // convert datetime.hours back into its register format
 
       const uint8_t BIT_FLAG_12_HR = 0b01000000;
-      if(temp_buffer & BIT_FLAG_12_HR){
+      if(hours_register & BIT_FLAG_12_HR){
         // if set to 12 hour time
-        fetchDatetime();  // get the time right now
-        uint8_t trueHours = decToBcd(datetime.hours);
-        trueHours -= BIT_FLAG_12_HR;  // convert hours back to the register value and remove the 12 hour flag
+        uint8_t trueHours = decToBcd(datetime.hours) - BIT_FLAG_12_HR;  // convert hours back to the register value and remove the 12 hour flag
 
         const uint8_t IS_PM_FLAG = 0b00100000;
-        const bool isPM = (trueHours & IS_PM_FLAG) > 0; 
-        if(isPM){
-          trueHours -= IS_PM_FLAG;
-          trueHours += 0b00010010;  // 12 in BCD
+        if((trueHours & IS_PM_FLAG) > 0){
+          trueHours -= (IS_PM_FLAG - 0b00010010); // remove PM flag and add 12 in BCD
         }
         trueHours = bcdToDec(trueHours);
         datetime.hours = trueHours % 24;

@@ -37,7 +37,7 @@ TEST(setTo24hr_test, doesnt_lose_time_during_hour_changeover){
   wire.changeBufferAfterRead = true;
   COPY_ARRAY(wire.mockBuffer, wire.nextMockBuffer);
   wire.nextMockBuffer[0] = 0; wire.nextMockBuffer[1] = 0; wire.nextMockBuffer[2] = 8;
-  wire.changeBufferAfterRead = 8;
+  wire.changeBufferAfterRead = 7;
   RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire);
   EXPECT_CLOSE_TO(RTC.getLocalTimestamp(), 160992000);
 }
