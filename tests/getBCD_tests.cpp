@@ -13,13 +13,13 @@
   MockWire wire = MockWire(AS_BCD(seconds), AS_BCD(minutes), AS_BCD(hours), AS_BCD(dayOfWeekVal), AS_BCD(date), AS_BCD(month), AS_BCD(year)); \
   RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(wire); \
   BCDTimeStruct bcdTime = RTC.getBCDTime(); \
-  PRINT_AS_INT("seconds_1", bcdTime.seconds_1)\
-  PRINT_AS_INT("seconds_10", bcdTime.seconds_10)\
-  PRINT_AS_INT("minutes_1", bcdTime.minutes_1)\
-  PRINT_AS_INT("minutes_10", bcdTime.minutes_10)\
-  PRINT_AS_INT("hours_1", bcdTime.hours_1)\
-  PRINT_AS_INT("hours_10", bcdTime.hours_10)\
-  PRINT_ARRAY("wire mock mockBuffer", wire.mockBuffer, 7)\
+  PRINT_AS_INT("seconds_1", bcdTime.seconds_1);\
+  PRINT_AS_INT("seconds_10", bcdTime.seconds_10);\
+  PRINT_AS_INT("minutes_1", bcdTime.minutes_1);\
+  PRINT_AS_INT("minutes_10", bcdTime.minutes_10);\
+  PRINT_AS_INT("hours_1", bcdTime.hours_1);\
+  PRINT_AS_INT("hours_10", bcdTime.hours_10);\
+  PRINT_ARRAY("wire mock mockBuffer", wire.mockBuffer, 7);\
 \
   EXPECT_EQ(bcdTime.seconds_1, ONES(seconds)); \
   EXPECT_EQ(bcdTime.seconds_10, TENS(seconds)); \
@@ -29,13 +29,13 @@
   EXPECT_EQ(bcdTime.hours_10, TENS(hours)); \
  \
   BCDDateStruct bcdDate = RTC.getBCDDate(); \
-  PRINT_AS_INT("dayOfWeek", bcdDate.dayOfWeek)\
-  PRINT_AS_INT("date_1", bcdDate.date_1)\
-  PRINT_AS_INT("date_10", bcdDate.date_10)\
-  PRINT_AS_INT("month_1", bcdDate.month_1)\
-  PRINT_AS_INT("month_10", bcdDate.month_10)\
-  PRINT_AS_INT("year_1", bcdDate.year_1)\
-  PRINT_AS_INT("year_10", bcdDate.year_10)\
+  PRINT_AS_INT("dayOfWeek", bcdDate.dayOfWeek);\
+  PRINT_AS_INT("date_1", bcdDate.date_1);\
+  PRINT_AS_INT("date_10", bcdDate.date_10);\
+  PRINT_AS_INT("month_1", bcdDate.month_1);\
+  PRINT_AS_INT("month_10", bcdDate.month_10);\
+  PRINT_AS_INT("year_1", bcdDate.year_1);\
+  PRINT_AS_INT("year_10", bcdDate.year_10);\
   EXPECT_EQ(bcdDate.dayOfWeek, dayOfWeekVal); \
   EXPECT_EQ(bcdDate.date_1, ONES(date)); \
   EXPECT_EQ(bcdDate.date_10, TENS(date)); \
@@ -65,3 +65,5 @@ QUICKTEST(feb_28_2024, 0, 58, 18, 3, 28, 2, 24)
 QUICKTEST(feb_29_2024, 0, 58, 18, 4, 29, 2, 24)
 
 QUICKTEST(mar_1_2024, 13, 45, 17, 5, 1, 3, 24)
+
+QUICKTEST(feb_6_2005, 59, 59, 23, 1, 6, 2, 5)

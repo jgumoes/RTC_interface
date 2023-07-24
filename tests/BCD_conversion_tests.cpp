@@ -20,7 +20,7 @@ TEST(bcd2bin_converts_correctly, for_0_to_99){
   RTCInterfaceClass<MockWire> RTC = RTCInterfaceClass(emptyWire);
   for(int tens = 0; tens < 10; tens++){
     for(int ones = 0; ones < 10; ones++){
-      ASSERT_EQ(RTC.bcd2bin((tens << 4) | ones), (tens * 10) + ones);
+      ASSERT_EQ(RTC.bcdToDec((tens << 4) | ones), (tens * 10) + ones);
     }
   }
 }

@@ -24,6 +24,13 @@ public:
   uint8_t readSize;
   uint8_t readIndex;
 
+  uint8_t writeHasBeenCalledTimes = 0;
+  bool writeHasModifiedBuffer = false;
+  uint8_t readHasBeenCalledTimes = 0;
+  uint8_t changeBufferAfterRead = 0;  // change the buffer before the nth time read has been called. i.e. =0 won't change the buffer, =1 will change the buffer after the first time read() is called, 2 for the 2nd time, etc.
+
+  uint8_t nextMockBuffer[13];
+  
   bool wireAddressSet = false;
   bool registerAddressSet = false;
 

@@ -39,18 +39,23 @@ uint8_t MockWire::read(){
   if(readIndex >= readSize){
     return 0;
   }
+  uint8_t readValue = mockBuffer[readIndex];
   readIndex++;
-  return mockBuffer[readIndex-1];
+  readHasBeenCalledTimes++;
+  if((readHasBeenCalledTimes == changeBufferAfterRead) && (changeBufferAfterRead > 0)){ COPY_ARRAY(nextMockBuffer, mockBuffer); }
+  return readValue;
 }
 
 void MockWire::write(int value){
   if(!wireAddressSet){ throw "Wire address hasn't been set!"; }
+  writeHasBeenCalledTimes += 1;
   if(!registerAddressSet){
     // first write() call sets the register address
     registerAddressSet = true;
     readIndex = value;
   }
   else{
+    writeHasModifiedBuffer = true;
     mockBuffer[readIndex] = value;
     readIndex++;
   }

@@ -73,7 +73,7 @@ class RTCInterfaceClass{
   public:
     WireClassDependancy Wire;
  
-    RTCInterfaceClass(const WireClassDependancy& WireClass){
+    RTCInterfaceClass(WireClassDependancy& WireClass){
       Wire = WireClass;
       setTo24hr();
     }
@@ -162,7 +162,7 @@ class RTCInterfaceClass{
     }
     
     /*
-     * Sets the time using a UTC timezone
+     * Sets the time using a UTC timestamp
      * @param time the UTC timestamp in seconds
      * @note the timezone and dst offsets must be set BEFORE calling this function
      * @return if the write was successful
@@ -171,6 +171,14 @@ class RTCInterfaceClass{
       pendingUpdates.timestamp = time;
       pendingUpdates.timestampPending = true;
       return commitUpdates();
+    }
+
+    /*
+     * set the time using a local timestamp.
+     * converts the timestamp to UTC, and calls setUTCTimestamp
+     */
+    bool setLocalTimestamp(uint32_t time){
+      return setUTCTimestamp(time - _timeZoneSecs - _DSTOffsetSecs);
     }
 
     /*
@@ -194,7 +202,8 @@ class RTCInterfaceClass{
     /*
     * convert a binary-coded decimal into a regular binary integer
     */
-    uint8_t bcd2bin (uint8_t val) { return val - 6 * (val >> 4); }
+    uint8_t bcdToDec (uint8_t val) { return (val & 0b00001111) + ((val >> 4) * 10); }
+    // uint8_t bcdToDec (uint8_t val) { return val - 6 * (val >> 4); }
 
     /*
      * convets a regular integer to binary-coded decimal
@@ -236,7 +245,7 @@ class RTCInterfaceClass{
       BCDTime.minutes_1 = minutes & BCDMask;
       BCDTime.minutes_10 = (minutes >> 4) & BCDMask;
       BCDTime.hours_1 = hours & BCDMask;
-      BCDTime.hours_10 = (hours >> 4) & 1;
+      BCDTime.hours_10 = (hours >> 4);
       BCDTime.readReady = true;
       return BCDTime;
     }
@@ -275,13 +284,13 @@ class RTCInterfaceClass{
       transmitByte(0);
 
       Wire.requestFrom(CLOCK_ADDRESS, 7);
-      datetime.seconds = bcd2bin(Wire.read());
-      datetime.minutes = bcd2bin(Wire.read());
-      datetime.hours = bcd2bin(Wire.read() & 0b00011111);
-      datetime.dayOfWeek = bcd2bin(Wire.read());
-      datetime.date = bcd2bin(Wire.read());
-      datetime.month = bcd2bin(Wire.read() & 0b00011111);
-      datetime.years = bcd2bin(Wire.read()); // years since midnight 2000
+      datetime.seconds = bcdToDec(Wire.read());
+      datetime.minutes = bcdToDec(Wire.read());
+      datetime.hours = bcdToDec(Wire.read());
+      datetime.dayOfWeek = bcdToDec(Wire.read());
+      datetime.date = bcdToDec(Wire.read());
+      datetime.month = bcdToDec(Wire.read() & 0b00011111);
+      datetime.years = bcdToDec(Wire.read()); // years since midnight 2000
     }
 
     uint32_t localTimestamp;
@@ -335,8 +344,17 @@ class RTCInterfaceClass{
      * @return if operation was performed without any errors
      */
     bool updateLocalTimestamp(uint32_t time){
-      bool anyErrors = 0;
       convertLocalTimestamp(time);
+      return transmitDatetime();
+    }
+
+    /*
+     * Transmits the dateTime struct to the RTC chip.
+     * @param time local timestamp in seconds
+     * @return if operation was performed without any errors
+     */
+    bool transmitDatetime(){
+      bool anyErrors = 0;
       anyErrors |= !transmit2Bytes(0x00, decToBcd(datetime.seconds));
       anyErrors |= !transmit2Bytes(0x01, decToBcd(datetime.minutes));
       anyErrors |= !transmit2Bytes(0x02, decToBcd(datetime.hours));
@@ -350,21 +368,33 @@ class RTCInterfaceClass{
 
     /*
      * sets the rtc to use 24 hour time
-     * NOTE: as it sets the rtc to the same time it just read,
-     * there's a non-zero chance the hour could change and set
-     * the time back by up to a minute
+     * NOTE: this method is likely to only be called once
+     * in a projects lifetime.
      */
     void setTo24hr(){
-      // TODO: there should be an internal check to make sure time doesn't go backwards
       uint8_t temp_buffer;
+
       transmitByte(0x02);
       Wire.requestFrom(CLOCK_ADDRESS, 1);
       temp_buffer = Wire.read();
 
-      if(temp_buffer & 0b01000000){
+      const uint8_t BIT_FLAG_12_HR = 0b01000000;
+      if(temp_buffer & BIT_FLAG_12_HR){
         // if set to 12 hour time
-        temp_buffer = temp_buffer & 0b10111111;
-        transmit2Bytes(0x02, temp_buffer);
+        fetchDatetime();  // get the time right now
+        uint8_t trueHours = decToBcd(datetime.hours);
+        trueHours -= BIT_FLAG_12_HR;  // convert hours back to the register value and remove the 12 hour flag
+
+        const uint8_t IS_PM_FLAG = 0b00100000;
+        const bool isPM = (trueHours & IS_PM_FLAG) > 0; 
+        if(isPM){
+          trueHours -= IS_PM_FLAG;
+          trueHours += 0b00010010;  // 12 in BCD
+        }
+        trueHours = bcdToDec(trueHours);
+        datetime.hours = trueHours % 24;
+        
+        transmitDatetime();
       }
     }
 

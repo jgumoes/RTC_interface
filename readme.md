@@ -45,6 +45,12 @@ While this library isn't dependent on any particular I2C library, it is built ar
 RTCInterfaceClass<TwoWire> RTC = RTCInterfaceClass(Wire);
 ```
 
+This library only supports 24 hour time, but if you really want to display 12 hour, you could do
+```c++
+uint8_t hours_10 = BCDTime.hours_10 % 12;
+bool isPM = BCDTime.hours_10 > 12;
+```
+
 # Testing
 
 Testing is done using Googletest and built through CMake. Setting up CMake has been a very humbling experience.
