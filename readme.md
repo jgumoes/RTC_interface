@@ -45,11 +45,23 @@ While this library isn't dependent on any particular I2C library, it is built ar
 RTCInterfaceClass<TwoWire> RTC = RTCInterfaceClass(Wire);
 ```
 
-This library only supports 24 hour time, but if you really want to display 12 hour, you could do
+This library only supports 24 hour time, but if you really want to display 12 hour, you could do:
 ```c++
-uint8_t hours_10 = BCDTime.hours_10 % 12;
-bool isPM = BCDTime.hours_10 > 12;
+uint8_t hours24 = (BCDTime.hours_10 << 4) + (BCDTime.hours_1 > 2);
+bool isPm = hours24 > 12
+if(isPm){ hours24 -= 12 }
+uint8_t hours_1 = hours24 % 10;
+uint8_t hours_10 = hours24 / 10;
 ```
+
+## Application Notes
+
+ * the time is stored as the local time. Timezone and DST offsets are removed to create a UTC timestamp
+ * the timestamps are in seconds since midnight 2000. If the 1970 epoch is required, the user must do the conversion themselves.
+ * The timezone and DST values are stored and handled as seconds. They must be converted to seconds before trying to set them.
+ * This library is not dependant on any particular I2C class. The user must specify the class they are using.
+ * The library also does not depend on any particular class or library for handling configs. However, the config class is required to have the methods `RTCConfigsStruct ConfigClass::getRTCConfigs()` and `bool ConfigClass::setRTCConfigs(RTCConfigsStruct configs)`.
+ * It's recommended that the user make their own class that handles all the configs for their application, that is responsible for reading and writing configs from the file system of choice.
 
 # Testing
 
