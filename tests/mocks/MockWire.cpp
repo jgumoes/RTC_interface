@@ -28,6 +28,49 @@ void MockWire::convertToBcd(){
   mockBuffer[6] = AS_BCD(mockBuffer[6]);
 }
 
+void MockWire::incrementSeconds()
+{
+  const uint8_t leapYearAdjust = ((mockBuffer[5] == 2) && (mockBuffer[6] % 4 == 0));
+  const uint8_t maxValues[13] = {
+    59,
+    59,
+    23,
+    7, //dayOfWeek
+    monthDays[AS_DEC(mockBuffer[5]) - 1] + leapYearAdjust,
+    12,
+    99
+  };
+
+  uint8_t index = 0;
+  while(incrementValue(index, maxValues[index])){
+    index++;
+    if(index == 3){
+      // its different for day-of-week
+      incrementValue(index, maxValues[index]);
+      index++;
+    }
+  }
+}
+
+bool MockWire::incrementValue(uint8_t index, uint8_t maxValue)
+{
+  const uint8_t resetValues[7] = {0,0,0,0,1,1,0};
+  uint8_t decValue = AS_DEC(mockBuffer[index]) + 1;
+  if(decValue > maxValue){
+    mockBuffer[index] = resetValues[index];
+    return true;
+  }
+  mockBuffer[index] = AS_BCD(decValue);
+  return false;
+}
+
+void MockWire::makeDatetimeBuffer()
+{
+  for(int i = 0; i < 7; i++){
+    datetimeBuffer[i] = mockBuffer[i];
+  }
+}
+
 uint8_t MockWire::requestFrom(int address, int size){
   if(size >= 13){ return false; }
   readSize = size + readIndex;

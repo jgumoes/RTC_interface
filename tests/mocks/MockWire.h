@@ -36,6 +36,25 @@ public:
 
   void convertToBcd();
 
+  const uint8_t monthDays[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+  /*
+   * Advance the buffer by one second
+   */
+  void incrementSeconds();
+  /*
+   * increment a value in the buffer.
+   * Example: for seconds, .incrementValue(0, 60);
+   * @param index the index in the buffer to increment
+   * @param maxValue buffer value ticks over if this value is reached
+   * @return true if the value ticks over
+   */
+  bool incrementValue(uint8_t index, uint8_t maxValue);
+
+  uint8_t datetimeBuffer[7];
+  void makeDatetimeBuffer();
+
+
+
   /*
    * returns true if size is less than 13, otherwise false
    */

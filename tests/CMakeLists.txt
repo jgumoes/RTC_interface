@@ -41,3 +41,13 @@ package_add_test(
   getTime_tests
   getTime_tests.cpp
 )
+
+package_add_test(
+  setTime_tests
+  setTime_tests.cpp
+)
+
+package_add_test(
+  Mock_tests
+  Mock_tests.cpp
+)

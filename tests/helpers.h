@@ -1,10 +1,11 @@
 #ifndef __HELPERS_H__
 #define __HELPERS_H__
 
-#define ONES(decimal) (decimal % 10)
-#define TENS(decimal) (decimal / 10)
+#define ONES(decimal) ((decimal) % 10)
+#define TENS(decimal) ((decimal) / 10)
 
 #define AS_BCD(decimal) (TENS(decimal) << 4) | ONES(decimal)
+#define AS_DEC(bcd) ((((bcd) >> 4) * 10) + ((bcd) & 0b00001111))
 
 // #include <stdio.h>
 #include<iostream>
