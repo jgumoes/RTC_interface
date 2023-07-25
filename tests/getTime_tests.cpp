@@ -46,6 +46,8 @@
   MockConfigManager config = MockConfigManager(timezone, DST); \
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config); \
   EXPECT_EQ(RTC.getUTCTimestamp(), expectedLocalTimestamp - DST - timezone); \
+  EXPECT_EQ(RTC.getDSTOffset(), DST); \
+  EXPECT_EQ(RTC.getTimezoneOffset(), timezone); \
 }
 
 #define QUICKTEST(testName, expectedLocalTimestamp, seconds, minutes, hours, dayOfWeek, date, month, years, timezone, DST)\
@@ -74,7 +76,7 @@ QUICKTEST(feb_29_2024, 762548280, 0, 58, 18, 4, 29, 2, 24, 0, 0)
 
 QUICKTEST(mar_1_2024, 762630313, 13, 45, 17, 5, 1, 3, 24, 0, 0)
 
-QUICKTEST(feb_6_2005, 161049599, 59, 59, 23, 1, 6, 2, 5, 0, 0)
+QUICKTEST(feb_6_2005, 161049599, 59, 59, 23, 7, 6, 2, 5, 0, 0)
 
 QUICKTEST(june_30_2023_1hr_dst, 804600317, 17, 5, 12, 1, 30, 6, 25, 0, 60*60)
 

@@ -97,9 +97,11 @@ class RTCInterfaceClass{
 
     /*
      * set the time using a local timestamp.
-     * converts the timestamp to UTC, and calls setUTCTimestamp
+     * @param time the local timestamp in seconds
+     * @note the timezone and dst offsets must be set BEFORE calling this function
+     * @return if the write was successful
      */
-    bool setLocalTimestamp(uint32_t time){return setUTCTimestamp(time - _timeZoneSecs - _DSTOffsetSecs);}
+    bool setLocalTimestamp(uint32_t time);
 
     /*
      * sends pending updates to the RTC and saves the offsets to file.
@@ -160,7 +162,7 @@ class RTCInterfaceClass{
      * @param time local timestamp in seconds
      * @return if operation was performed without any errors
      */
-    bool updateLocalTimestamp(uint32_t time){convertLocalTimestamp(time);return transmitDatetime();}
+    bool updateLocalTimestamp(uint32_t time);
 
     /*
      * Transmits the dateTime struct to the RTC chip.
@@ -214,29 +216,45 @@ QUICK_DEF(uint32_t)getLocalTimestamp(){
   return localTimestamp;
 }
 
+QUICK_DEF(bool)updateLocalTimestamp(uint32_t time){
+  convertLocalTimestamp(time);
+  return transmitDatetime();
+}
+
 QUICK_DEF(bool)setUTCTimestamp(uint32_t time, int32_t timezone, uint16_t dst){
   setTimezoneOffset(timezone);
   setDSTOffset(dst);
-  setUTCTimestamp(time);
-  return commitUpdates();
+  return setUTCTimestamp(time);
 }
 
 QUICK_DEF(bool)setUTCTimestamp(uint32_t time){
+  return setLocalTimestamp(time + _timeZoneSecs + _DSTOffsetSecs);
+}
+
+QUICK_DEF(bool)setLocalTimestamp(uint32_t time){
   pendingUpdates.timestamp = time;
   pendingUpdates.timestampPending = true;
   return commitUpdates();
 }
 
 QUICK_DEF(bool)commitUpdates(){
-  uint32_t timestamp = (pendingUpdates.timestampPending) ? pendingUpdates.timestamp : getUTCTimestamp();  // set a new time or update the current one
-  timestamp += (pendingUpdates.DSTPending) ? pendingUpdates.DST : _DSTOffsetSecs;                         // add the new DST offset or use the current one
-  timestamp += (pendingUpdates.timezonePending) ? pendingUpdates.timezone : _timeZoneSecs;                // add the new timezone offset or use the current one
-  bool res = updateLocalTimestamp(timestamp + _timeZoneSecs + _DSTOffsetSecs);
-  if(res){
-    if(pendingUpdates.DSTPending){ _DSTOffsetSecs = pendingUpdates.DST; }
-    if(pendingUpdates.timezonePending){ _timeZoneSecs = pendingUpdates.timezonePending; }
+  uint32_t timestamp = (pendingUpdates.timestampPending) ? pendingUpdates.timestamp : getLocalTimestamp();  // set a new time or update the current one
+  if(pendingUpdates.DSTPending){
+    timestamp += pendingUpdates.DST - _DSTOffsetSecs; // replace DST offset with incoming offset
+    _DSTOffsetSecs = pendingUpdates.DST;
   }
-  resetPendingUpdates();
+  if(pendingUpdates.timezonePending){
+    timestamp += pendingUpdates.timezone - _timeZoneSecs; // replace timezone offset with incoming offset
+    _timeZoneSecs = pendingUpdates.timezone;
+  }
+  bool res = updateLocalTimestamp(timestamp);
+  if(res){
+    resetPendingUpdates();
+    RTCConfigsStruct configs;
+    configs.DST = _DSTOffsetSecs;
+    configs.timezone = _timeZoneSecs;
+    return ConfigManager.setRTCConfigs(configs);
+  }
   return res;
 }
 
@@ -333,21 +351,21 @@ QUICK_DEF(void)convertLocalTimestamp(uint32_t time){
   time /= 60;             // time is now in hours
   datetime.hours = time % 24;     // i.e. divide by number of days and take remainder
   time /= 24;             // time is now in days since 1/1/2000
-  datetime.dayOfWeek = time % 7;
+  datetime.dayOfWeek = (time + 6) % 7;  // epoch starts on a saturday
   datetime.dayOfWeek += 7 * !datetime.dayOfWeek;  // if day is 0, set it to 7
   datetime.years = ((4 * time) / 1461);
   time -= (datetime.years * 365.25) - 1;   // time is now in day of the year
                                             // +1 because day of the year isn't zero-indexed
 
-  int leapDay = (!(datetime.years % 4) && (time > 59)); // knock of a day if its a leap year and after Feb 29
+  uint8_t leapDay = (!(datetime.years % 4) && (time > 59)); // knock of a day if its a leap year and after Feb 28
   time -= leapDay;
-  int i = 0;
+  uint8_t i = 0;
   while (time > monthDays[i]){
       time -= monthDays[i];
       i++;
   }
-  datetime.date = time + leapDay;
   datetime.month = i + 1;
+  datetime.date = time + (leapDay && (datetime.month == 2)); // add the leap day back if it's actually Feb 29
 }
 
 QUICK_DEF(bool)transmitDatetime(){
