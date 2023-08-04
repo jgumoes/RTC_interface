@@ -29,6 +29,14 @@ struct RTCConfigsStruct{
    uint16_t DST = 0;      // daylight savings offset in seconds
 };
 
+enum class SquareWaveFrequencies: uint8_t {
+  hz_1 = 0,     // 1 Hz
+  hz_1024 = 1,  // 1.024 kHz
+  hz_4096 = 2,  // 4.096 kHz
+  hz_8192 = 3,  // 8.192 kHz
+  off = 4       // no square wave
+};
+
 #ifdef USE_BCD_TIME // don't need this in the progmem if we're not going to use it
   struct BCDTimeStruct{
     uint8_t seconds_1;

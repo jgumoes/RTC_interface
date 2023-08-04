@@ -5,9 +5,9 @@ as I buy them ;-). Doesn't yet support alarms.
 
 In the future, I'd like to use a chipset with on-board eeprom for storing the timezone and dst offsets, but hobbyist RTC modules will need access to some kind of storage. This will probably be in the form of a filesystem interface class.
 
-TODO: i need to add a toggle for the 1hz square wave output 
 TODO: i need to make test files for embedded tests
 TODO: examples!
+TODO: the DS3231 chip has a time fault flag. reading this should be implemented for Device Time Service
 
 # Theory of Operation
 
@@ -81,6 +81,9 @@ class RTCInterfaceClass{
     uint8_t bcdToDec (uint8_t val);
     uint8_t decToBcd(uint8_t val);
     void resetDatetime();
+
+    void enableSquarewave(SquareWaveFrequencies f);
+    void disableSquareware();
 
 #ifdef USE_BCD_TIME
     BCDTimeStruct BCDTime;

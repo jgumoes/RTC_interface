@@ -126,6 +126,26 @@ class RTCInterfaceClass{
      */
     void resetDatetime();
 
+    /*
+     * enables a square wave at a preset frequency
+     * @param f frequency of the square wave. use the SquareWaveFrequencies enum
+     */
+    void enableSquarewave(SquareWaveFrequencies f){
+      if(f == SquareWaveFrequencies.off){
+        disableSquareware();
+      }
+      else{
+        transmit2Bytes(0x0E, 0b01000000 | f << 3);
+      }
+    }
+
+    /*
+     * disables the square wave
+     */
+    void disableSquareware(){
+        transmit2Bytes(0x0E, 0b00000000);
+    }
+
 #ifdef USE_BCD_TIME
     BCDTimeStruct BCDTime;
     BCDDateStruct BCDDate;
