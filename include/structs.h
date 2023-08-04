@@ -25,8 +25,8 @@ struct PendingUpdatesStruct{
 
 // holds the config values
 struct RTCConfigsStruct{
-   int32_t timezone = 0;
-   uint16_t DST = 0;
+   int32_t timezone = 0;  // timezone offset in seconds
+   uint16_t DST = 0;      // daylight savings offset in seconds
 };
 
 #ifdef USE_BCD_TIME // don't need this in the progmem if we're not going to use it

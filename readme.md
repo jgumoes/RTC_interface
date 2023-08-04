@@ -5,14 +5,16 @@ as I buy them ;-). Doesn't yet support alarms.
 
 In the future, I'd like to use a chipset with on-board eeprom for storing the timezone and dst offsets, but hobbyist RTC modules will need access to some kind of storage. This will probably be in the form of a filesystem interface class.
 
-There is a known bug where a timestamp for 1/3/2024 (a leap year) gets interpreted as 2/3/2024
+TODO: i need to add a toggle for the 1hz square wave output 
+TODO: i need to make test files for embedded tests
+TODO: examples!
 
 # Theory of Operation
 
 ## Reading time
 
 The normal process of reading time is:
- - TODO: the class loads stored timezone and daylight savings offsets from storage and holds as instance variables
+ - the class loads stored timezone and daylight savings offsets from a storage class and holds them as instance variables
  - local time is read from the chipset in whichever form it uses, and stores the decimal values in a struct
  - the DateTimeStruct can be read directly. DateTimeStruct::readReady will be true if the read operation has completed (useful for RTOS)
  - if a local timestamp is required, the DateTimeStruct values are combined into seconds since midnight 1/1/2000. SECONDS_BETWEEN_1970_2000 can be added if the 1970 epoch is preferred.
@@ -41,9 +43,78 @@ While this library isn't dependent on any particular I2C library, it is built ar
 
 #include <Wire.h>
 #include "RTC_interface.h"
+#include "My_ConfigManager.h"
 
-RTCInterfaceClass<TwoWire> RTC = RTCInterfaceClass(Wire);
+ConfigManagerClass ConfigManager;
+
+RTCInterfaceClass<TwoWire, ConfigManagerClass> RTC = RTCInterfaceClass(Wire, ConfigManager);
 ```
+
+## Public methods and variables
+
+```c++
+class RTCInterfaceClass{
+  public:
+    WireClassDependancy& Wire;
+    ConfigManagerDependancy& ConfigManager;
+ 
+    RTCInterfaceClass(WireClassDependancy& WireClass, ConfigManagerDependancy& ConfigManagerClass)
+
+    DateTimeStruct datetime;
+    const uint8_t monthDays[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+
+    uint32_t getLocalTimestamp();
+    uint32_t getUTCTimestamp();
+    DateTimeStruct getDatetime();
+
+    void setTimezoneOffset(int32_t seconds);
+    int32_t getTimezoneOffset();
+    void setDSTOffset(uint16_t seconds);
+    uint16_t getDSTOffset();
+
+    bool setUTCTimestamp(uint32_t time, int32_t timezone, uint16_t dst);
+    bool setUTCTimestamp(uint32_t time);
+    bool setLocalTimestamp(uint32_t time);
+
+    bool commitUpdates();
+
+    uint8_t bcdToDec (uint8_t val);
+    uint8_t decToBcd(uint8_t val);
+    void resetDatetime();
+
+#ifdef USE_BCD_TIME
+    BCDTimeStruct BCDTime;
+    BCDDateStruct BCDDate;
+
+    BCDTimeStruct getBCDTime();
+    BCDDateStruct getBCDDate();
+#endif
+}
+```
+
+## Config Manger
+TODO: create some examples
+
+You will have to make your own config manager. It really doesn't matter how it works: it could read a json from the on-board file system and use ArduinoJson to parse out the values, it could read the values from external eeprom, it could be something completely different. The choice is yours, but you will have to make it.
+
+All that matters is the class has the following two methods:
+
+```C++
+class ConfigManagerClass {
+  RTCConfigsStruct getRTCConfigs();
+  bool setRTCConfigs(RTCConfigsStruct configs);
+}
+```
+
+The RTCConfigStruct can be found in structs.h, and looks like:
+```c++
+struct RTCConfigsStruct{
+   int32_t timezone = 0;  // timezone offset in seconds
+   uint16_t DST = 0;      // daylight savings offset in seconds
+};
+```
+
+## 24 Hours
 
 This library only supports 24 hour time, but if you really want to display 12 hour, you could do:
 ```c++

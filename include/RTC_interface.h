@@ -201,7 +201,6 @@ returnType RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::
 QUICK_DEF(uint32_t)getLocalTimestamp(){
   fetchDatetime();
   datetime.readReady = true;
-  // TODO: can this be improved?
   localTimestamp = (datetime.years * 365) + ((datetime.years + 3)/4);      // years to days
 
   uint16_t days = datetime.date - 1 + (!(datetime.years % 4) && (datetime.month > 2)); // remove a day to 0 index the days, but
