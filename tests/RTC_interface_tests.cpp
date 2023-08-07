@@ -22,6 +22,7 @@ TEST(setTo24hr_test, sets_RTC_to_24_hrs){
   MockWire wire = MockWire(0, 8, 7 | BIT_FLAG_12_HR, 2, 6, 2, 5);
   MockConfigManager config = MockConfigManager(0, 0);
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config);
+  RTC.begin();
   EXPECT_FALSE((wire.mockBuffer[2] & BIT_FLAG_12_HR) > 0);
   EXPECT_EQ(RTC.getLocalTimestamp(), 160988880);
   EXPECT_TRUE(wire.writeHasBeenCalledTimes > 0); // this is more to test the MockWire behaviour for the next test
@@ -31,6 +32,7 @@ TEST(setTo24hr_test, doesnt_write_if_already_set_to_24hr){
   MockWire wire = MockWire(0, 8, 7, 2, 6, 2, 5);
   MockConfigManager config = MockConfigManager(0, 0);
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config);
+  RTC.begin();
   EXPECT_FALSE(wire.writeHasModifiedBuffer);
 }
 
@@ -53,6 +55,7 @@ TEST(setTo24hr_test, doesnt_lose_time_during_day_changeover){
   wire.changeBufferAfterRead = 8;
   MockConfigManager config = MockConfigManager(0, 0);
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config);
+  RTC.begin();
   EXPECT_CLOSE_TO(RTC.getLocalTimestamp(), 161049600);
   // EXPECT_EQ(RTC.getLocalTimestamp(), 161049599);
 }
@@ -61,6 +64,7 @@ TEST(config_values, are_loaded_when_RTC_initiates){
   MockWire wire = MockWire(0, 8, 7, 2, 6, 2, 5);
   MockConfigManager config = MockConfigManager(7 * 60 * 60, 1 * 60 * 60);
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config);
+  RTC.begin();
   EXPECT_EQ(RTC.getDSTOffset(), 1 * 60 * 60);
   EXPECT_EQ(RTC.getTimezoneOffset(), 7 * 60 * 60);
 }

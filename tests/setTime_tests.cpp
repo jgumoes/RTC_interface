@@ -12,6 +12,7 @@
 void setLocalTimestampTest(uint32_t localTimestamp, int32_t timezone, uint16_t DST, uint8_t dayOfWeek){
   MockWire wire = MockWire(); MockConfigManager config = MockConfigManager(timezone, DST);
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config);
+  RTC.begin();
   RTC.setLocalTimestamp(localTimestamp);
   wire.incrementSeconds();  // RTC should have written the time to wire. By incrementing the second value,
   EXPECT_EQ(RTC.getLocalTimestamp(), localTimestamp + 1);  // we can check this behaviour
@@ -22,6 +23,7 @@ void setLocalTimestampTest(uint32_t localTimestamp, int32_t timezone, uint16_t D
 void setUTCTimestampTest(uint32_t localTimestamp, int32_t timezone, uint16_t DST, uint8_t dayOfWeek){
   MockWire wire = MockWire(); MockConfigManager config = MockConfigManager(timezone, DST);
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config);
+  RTC.begin();
   RTC.setUTCTimestamp(localTimestamp - timezone - DST);
   wire.incrementSeconds();  // RTC should have written the time to wire. By incrementing the second value,
   EXPECT_EQ(RTC.getLocalTimestamp(), localTimestamp + 1);  // we can check this behaviour
@@ -32,6 +34,7 @@ void setUTCTimestampTest(uint32_t localTimestamp, int32_t timezone, uint16_t DST
 void changeTimezoneTest(uint32_t localTimestamp, int32_t initialTimezone, uint16_t DST){
   MockWire wire = MockWire(); MockConfigManager config = MockConfigManager(initialTimezone, DST);
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config);
+  RTC.begin();
   uint32_t UTCTimestamp = localTimestamp - DST - initialTimezone;
   RTC.setUTCTimestamp(UTCTimestamp);
   for(int i = -12*4; i <= 14*4; i++){
@@ -46,6 +49,7 @@ void changeTimezoneTest(uint32_t localTimestamp, int32_t initialTimezone, uint16
 void changeDSTTest(uint32_t localTimestamp, int32_t timezone, uint16_t initialDST){
   MockWire wire = MockWire(); MockConfigManager config = MockConfigManager(timezone, initialDST);
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config);
+  RTC.begin();
   uint32_t UTCTimestamp = localTimestamp - initialDST - timezone;
   RTC.setUTCTimestamp(UTCTimestamp);
   uint16_t possibleDST[4] = { 0, 30*60, 60*60, 2*60*60};

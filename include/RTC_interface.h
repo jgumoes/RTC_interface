@@ -32,6 +32,9 @@ class RTCInterfaceClass{
  
     RTCInterfaceClass(WireClassDependancy& WireClass, ConfigManagerDependancy& ConfigManagerClass)
       : Wire(WireClass), ConfigManager(ConfigManagerClass) {
+    }
+
+    void begin(){
       RTCConfigsStruct configVals = ConfigManager.getRTCConfigs();
       _timeZoneSecs = configVals.timezone;
       _DSTOffsetSecs = configVals.DST;

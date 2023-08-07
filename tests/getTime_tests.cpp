@@ -14,6 +14,7 @@
   wire.convertToBcd(); \
   MockConfigManager config = MockConfigManager(timezone, DST); \
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config); \
+  RTC.begin(); \
   EXPECT_EQ(RTC.getLocalTimestamp(), expectedLocalTimestamp); \
 }
 
@@ -21,6 +22,7 @@
   MockWire wire = MockWire(AS_BCD(seconds), AS_BCD(minutes), AS_BCD(hours), AS_BCD(dayOfWeekVal), AS_BCD(date), AS_BCD(month), AS_BCD(year)); \
   MockConfigManager config = MockConfigManager(timezone, DST); \
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config); \
+  RTC.begin(); \
   BCDTimeStruct bcdTime = RTC.getBCDTime(); \
 \
   EXPECT_EQ(bcdTime.seconds_1, ONES(seconds)); \
@@ -45,6 +47,7 @@
   wire.convertToBcd(); \
   MockConfigManager config = MockConfigManager(timezone, DST); \
   RTCInterfaceClass<MockWire, MockConfigManager> RTC = RTCInterfaceClass(wire, config); \
+  RTC.begin(); \
   EXPECT_EQ(RTC.getUTCTimestamp(), expectedLocalTimestamp - DST - timezone); \
   EXPECT_EQ(RTC.getDSTOffset(), DST); \
   EXPECT_EQ(RTC.getTimezoneOffset(), timezone); \

@@ -48,6 +48,16 @@ While this library isn't dependent on any particular I2C library, it is built ar
 ConfigManagerClass ConfigManager;
 
 RTCInterfaceClass<TwoWire, ConfigManagerClass> RTC = RTCInterfaceClass(Wire, ConfigManager);
+
+void setup(){
+  ...
+  // initialise dependancies first
+  Wire.begin();
+  ConfigManager.begin();
+  // initialise RTCInterface
+  RTC.begin();
+  ...
+}
 ```
 
 ## Public methods and variables
