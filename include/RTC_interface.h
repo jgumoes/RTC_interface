@@ -134,11 +134,11 @@ class RTCInterfaceClass{
      * @param f frequency of the square wave. use the SquareWaveFrequencies enum
      */
     void enableSquarewave(SquareWaveFrequencies f){
-      if(f == SquareWaveFrequencies.off){
+      if(f == SquareWaveFrequencies::off){
         disableSquareware();
       }
       else{
-        transmit2Bytes(0x0E, 0b01000000 | f << 3);
+        transmit2Bytes(0x0E, 0b01000000 | static_cast<uint8_t>(f) << 3);
       }
     }
 
