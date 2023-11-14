@@ -11,7 +11,7 @@ struct DateTimeStruct{
   uint8_t date;
   uint8_t month;
   uint8_t years;
-  bool readReady; // if true, struct is suitable for reading
+  bool readReady = false; // if true, struct is suitable for reading
 };
 
 struct PendingUpdatesStruct{

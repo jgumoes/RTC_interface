@@ -63,6 +63,15 @@ void setup(){
 ## Public methods and variables
 
 ```c++
+// globally defined variables and methods:
+const uint8_t monthDays[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+void convertLocalTimestamp(uint32_t time, DateTimeStruct& datetime);
+
+uint8_t bcdToDec (uint8_t val);
+uint8_t decToBcd(uint8_t val);
+
+// class definitions
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
 class RTCInterfaceClass{
   public:
     WireClassDependancy& Wire;
@@ -71,7 +80,6 @@ class RTCInterfaceClass{
     RTCInterfaceClass(WireClassDependancy& WireClass, ConfigManagerDependancy& ConfigManagerClass)
 
     DateTimeStruct datetime;
-    const uint8_t monthDays[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
 
     uint32_t getLocalTimestamp();
     uint32_t getUTCTimestamp();
@@ -88,8 +96,6 @@ class RTCInterfaceClass{
 
     bool commitUpdates();
 
-    uint8_t bcdToDec (uint8_t val);
-    uint8_t decToBcd(uint8_t val);
     void resetDatetime();
 
     void enableSquarewave(SquareWaveFrequencies f);
@@ -105,7 +111,7 @@ class RTCInterfaceClass{
 }
 ```
 
-## Config Manger
+## Config Manager
 TODO: create some examples
 
 You will have to make your own config manager. It really doesn't matter how it works: it could read a json from the on-board file system and use ArduinoJson to parse out the values, it could read the values from external eeprom, it could be something completely different. The choice is yours, but you will have to make it.
