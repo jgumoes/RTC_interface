@@ -7,7 +7,7 @@
  * @param time 
  * @param datetime 
  */
-void convertLocalTimestamp(uint32_t time, DateTimeStruct *datetime){
+void convertFromLocalTimestamp(uint32_t time, DateTimeStruct *datetime){
   datetime->seconds = time % 60;   // i.e. divide by number of minutes and take remainder
   time /= 60;             // time is now in minutes
   datetime->minutes = time % 60;   // i.e. divide by number of hours and take remainder
@@ -29,6 +29,26 @@ void convertLocalTimestamp(uint32_t time, DateTimeStruct *datetime){
   }
   datetime->month = i + 1;
   datetime->date = time + (leapDay && (datetime->month == 2)); // add the leap day back if it's actually Feb 29
+}
+
+uint32_t convertToLocalTimestamp(DateTimeStruct *datetime){
+  uint32_t timestamp = datetime->years * 365.25;  // in days. adds an extra day on a leap year, which we might not want
+
+  uint16_t dayOfYear = datetime->date;
+  for(uint8_t month = 1; month < datetime->month; month++){
+    dayOfYear += monthDays[month - 1];
+  }
+
+  if((datetime->years % 4 == 0) && (datetime->month <= 2)){
+    dayOfYear -= 1; // handle leap days
+  }
+  
+  timestamp += dayOfYear;
+  timestamp = (timestamp * 24) + datetime->hours;
+  timestamp = (timestamp * 60) + datetime->minutes;
+  timestamp = (timestamp * 60) + datetime->seconds;
+
+  return timestamp;
 }
 
 /*

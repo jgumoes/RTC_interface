@@ -35,7 +35,8 @@
 #define BCDMask 0b00001111
 
 const uint8_t monthDays[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
-void convertLocalTimestamp(uint32_t time, DateTimeStruct *datetime);
+void convertFromLocalTimestamp(uint32_t time, DateTimeStruct *datetime);
+uint32_t convertToLocalTimestamp(DateTimeStruct *datetime);
 
 uint8_t bcdToDec (uint8_t val);
 uint8_t decToBcd(uint8_t val);
@@ -205,7 +206,7 @@ class RTCInterfaceClass{
     bool updateLocalTimestamp(uint32_t time){
       // datetime.readReady = false;
       resetDatetime();
-      convertLocalTimestamp(time, &datetime);
+      convertFromLocalTimestamp(time, &datetime);
       return transmitDatetime();
     };
 

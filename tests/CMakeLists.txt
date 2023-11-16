@@ -3,7 +3,19 @@
 add_subdirectory("${PROJECT_SOURCE_DIR}/googletest" "googletest")
 add_subdirectory("${PROJECT_SOURCE_DIR}/tests/mocks" "MockWire")
 include_directories(MockWire PUBLIC "${PROJECT_SOURCE_DIR}/tests/mocks")
+include_directories(MockConfigManager PUBLIC "${PROJECT_SOURCE_DIR}/tests/mocks")
 link_directories("${PROJECT_SOURCE_DIR}/tests/mocks")
+
+include_directories(RTC_interface PUBLIC
+  "${PROJECT_SOURCE_DIR}/include"
+  "${PROJECT_SOURCE_DIR}/src"
+)
+
+# target_include_directories(RTC_interface PUBLIC
+#   "${PROJECT_SOURCE_DIR}/include"
+#   "${PROJECT_SOURCE_DIR}/src"
+# )
+
 
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -12,6 +24,8 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 macro(package_add_test TESTNAME)
     # create an executable in which the tests will be stored
     add_executable(${TESTNAME} ${ARGN})
+    # include_directories(${TESTNAME} PUBLIC "${PROJECT_SOURCE_DIR}/tests")
+    include_directories()
     # link the Google test infrastructure, mocking library, and a default main function to
     # the test executable.  Remove g_test_main if writing your own main function.
     target_link_libraries(${TESTNAME} MockWire MockConfigManager gtest gmock gtest_main RTC_interface)
@@ -28,26 +42,25 @@ endmacro()
 include(GoogleTest)
 
 package_add_test(
-  RTC_interface_tests
-  RTC_interface_tests.cpp
+  RTC_interface_tests RTC_interface_tests.cpp
 )
 
 package_add_test(
-  BCD_conversion_tests
-  BCD_conversion_tests.cpp
+  BCD_conversion_tests BCD_conversion_tests.cpp
 )
 
 package_add_test(
-  getTime_tests
-  getTime_tests.cpp
+  getTime_tests getTime_tests.cpp
 )
 
 package_add_test(
-  setTime_tests
-  setTime_tests.cpp
+  setTime_tests setTime_tests.cpp
 )
 
 package_add_test(
-  Mock_tests
-  Mock_tests.cpp
+  Mock_tests Mock_tests.cpp
+)
+
+package_add_test(
+  timestamp_conversion_tests timestamp_conversion_tests.cpp
 )
