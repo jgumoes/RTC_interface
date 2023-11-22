@@ -1,7 +1,7 @@
 {
   "name": "RTC_interface",
   "version": "0.0.2",
-  "description": "An interface for the DS3231 RTC chipet",
+  "description": "An interface for the DS3231 RTC chipet. Made with the BLE Device Time Service in mind.",
   "keywords": "RTC, DS3231",
   "repository":
   {
@@ -15,6 +15,6 @@
       "maintainer": true
     }
   ],
-  "frameworks": "arduino",
+  "frameworks": "*",
   "platforms": "*"
 }

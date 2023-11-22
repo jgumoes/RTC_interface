@@ -12,9 +12,6 @@
 *  - the class will attempt to write the new local timestamp to the chip
 *  - if the write is successful, the new offsets will be saved as instance variables.
 *      commitChanges() will return true, and the KeeperOfTime module should save the new offsets to file
-* 
-* There is a known bug where a timestamp for 1/3/2024 (a leap year)
-* gets interpreted as 2/3/2024
 */
 
 #ifndef RTC_interface_h
