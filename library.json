@@ -8,6 +8,17 @@
     "type": "git",
     "url": "https://github.com/jgumoes/RTC_interface"
   },
+  "export": {
+    "exclude": [
+      "build",
+      "googletest",
+      "tests",
+      ".vscode",
+      "/**/CMakeLists.txt",
+      ".gitignore",
+      ".gitmodules"
+    ]
+  },
   "authors":
   [
     {
