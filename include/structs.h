@@ -20,7 +20,7 @@ struct PendingUpdatesStruct{
   bool DSTPending = false;
   uint16_t DST = 0;
   bool timestampPending = false;
-  uint32_t timestamp = 0; // incoming timestamps will always be UTC as per BLE DTS specification
+  uint64_t timestamp = 0; // incoming timestamps will always be UTC as per BLE DTS specification
 };
 
 // holds the config values

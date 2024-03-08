@@ -32,8 +32,8 @@
 #define BCDMask 0b00001111
 
 const uint8_t monthDays[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
-void convertFromLocalTimestamp(uint32_t time, DateTimeStruct *datetime);
-uint32_t convertToLocalTimestamp(DateTimeStruct *datetime);
+void convertFromLocalTimestamp(uint64_t time, DateTimeStruct *datetime);
+uint64_t convertToLocalTimestamp(DateTimeStruct *datetime);
 
 uint8_t bcdToDec (uint8_t val);
 uint8_t decToBcd(uint8_t val);
@@ -69,12 +69,12 @@ class RTCInterfaceClass{
     /*
      * Returns the local timestamp in seconds since the 2000 epoch
      */
-    uint32_t getLocalTimestamp();
+    uint64_t getLocalTimestamp();
     
     /*
      * Returns the UTC timestamp, without timezone and DST adjustments
      */
-    uint32_t getUTCTimestamp(){ return getLocalTimestamp() - _timeZoneSecs - _DSTOffsetSecs; }
+    uint64_t getUTCTimestamp(){ return getLocalTimestamp() - _timeZoneSecs - _DSTOffsetSecs; }
 
     DateTimeStruct getDatetime(){fetchDatetime();return datetime;}
 
@@ -110,7 +110,7 @@ class RTCInterfaceClass{
      * @param DST offset in seconds
      * @return if the write was successful
      */
-    bool setUTCTimestamp(uint32_t time, int32_t timezone, uint16_t dst){
+    bool setUTCTimestamp(uint64_t time, int32_t timezone, uint16_t dst){
       setTimezoneOffset(timezone);
       setDSTOffset(dst);
       return setUTCTimestamp(time);
@@ -122,7 +122,7 @@ class RTCInterfaceClass{
      * @note the timezone and dst offsets must be set BEFORE calling this function
      * @return if the write was successful
      */
-    bool setUTCTimestamp(uint32_t time){
+    bool setUTCTimestamp(uint64_t time){
       return setLocalTimestamp(time + _timeZoneSecs + _DSTOffsetSecs);
     };
 
@@ -132,7 +132,7 @@ class RTCInterfaceClass{
      * @note the timezone and dst offsets must be set BEFORE calling this function
      * @return if the write was successful
      */
-    bool setLocalTimestamp(uint32_t time){
+    bool setLocalTimestamp(uint64_t time){
       pendingUpdates.timestamp = time;
       pendingUpdates.timestampPending = true;
       return commitUpdates();
@@ -187,7 +187,7 @@ class RTCInterfaceClass{
      */
     void fetchDatetime();
 
-    uint32_t localTimestamp;
+    uint64_t localTimestamp;
     PendingUpdatesStruct pendingUpdates;
 
     /*
@@ -200,7 +200,7 @@ class RTCInterfaceClass{
      * @param time local timestamp in seconds
      * @return if operation was performed without any errors
      */
-    bool updateLocalTimestamp(uint32_t time){
+    bool updateLocalTimestamp(uint64_t time){
       // datetime.readReady = false;
       resetDatetime();
       convertFromLocalTimestamp(time, &datetime);
@@ -241,7 +241,7 @@ returnType RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::
 
 /* Public Class Methods */
 
-QUICK_DEF(uint32_t)getLocalTimestamp(){
+QUICK_DEF(uint64_t)getLocalTimestamp(){
   fetchDatetime();
   datetime.readReady = true;
   localTimestamp = (datetime.years * 365) + ((datetime.years + 3)/4);      // years to days
@@ -259,7 +259,7 @@ QUICK_DEF(uint32_t)getLocalTimestamp(){
 }
 
 QUICK_DEF(bool)commitUpdates(){
-  uint32_t timestamp = (pendingUpdates.timestampPending) ? pendingUpdates.timestamp : getLocalTimestamp();  // set a new time or update the current one
+  uint64_t timestamp = (pendingUpdates.timestampPending) ? pendingUpdates.timestamp : getLocalTimestamp();  // set a new time or update the current one
   if(pendingUpdates.DSTPending){
     timestamp += pendingUpdates.DST - _DSTOffsetSecs; // replace DST offset with incoming offset
     _DSTOffsetSecs = pendingUpdates.DST;
