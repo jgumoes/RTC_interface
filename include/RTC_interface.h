@@ -17,7 +17,11 @@
 #ifndef RTC_interface_h
 #define RTC_interface_h
 
-#include <stdint.h>
+#ifdef native_env
+  #include <stdint.h>
+  // #include <iostream>
+#endif
+#include <memory>
 #include "structs.h"
 
 #define USE_DS3231  // TODO: remove once more chipsets are supported
@@ -49,15 +53,15 @@ uint8_t decToBcd(uint8_t val);
 template <typename WireClassDependancy, typename ConfigManagerDependancy>
 class RTCInterfaceClass{
   public:
-    WireClassDependancy& Wire;
-    ConfigManagerDependancy& ConfigManager;
+    std::shared_ptr<WireClassDependancy> _wire;
+    std::shared_ptr<ConfigManagerDependancy> _configManager;
  
-    RTCInterfaceClass(WireClassDependancy& WireClass, ConfigManagerDependancy& ConfigManagerClass)
-      : Wire(WireClass), ConfigManager(ConfigManagerClass) {
+    RTCInterfaceClass(std::shared_ptr<WireClassDependancy> WireClass, std::shared_ptr<ConfigManagerDependancy> configManager)
+      : _wire(WireClass), _configManager(configManager) {
     }
 
     void begin(){
-      RTCConfigsStruct configVals = ConfigManager.getRTCConfigs();
+      RTCConfigsStruct configVals = _configManager->getRTCConfigs();
       _timeZoneSecs = configVals.timezone;
       _DSTOffsetSecs = configVals.DST;
       setTo24hr();
@@ -236,12 +240,10 @@ class RTCInterfaceClass{
     bool transmit2Bytes(uint8_t registerAddress, uint8_t value);
 };
 
-#define QUICK_DEF(returnType) template <typename WireClassDependancy, typename ConfigManagerDependancy> \
-returnType RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::
-
 /* Public Class Methods */
 
-QUICK_DEF(uint64_t)getLocalTimestamp(){
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
+uint64_t RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::getLocalTimestamp(){
   fetchDatetime();
   datetime.readReady = true;
   localTimestamp = (datetime.years * 365) + ((datetime.years + 3)/4);      // years to days
@@ -254,11 +256,11 @@ QUICK_DEF(uint64_t)getLocalTimestamp(){
   localTimestamp = (localTimestamp + datetime.hours) * 60;     // hours to minutes
   localTimestamp = (localTimestamp + datetime.minutes) * 60;   // minutes to seconds
   localTimestamp += datetime.seconds;                          // add the seconds
-
   return localTimestamp;
 }
 
-QUICK_DEF(bool)commitUpdates(){
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
+bool RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::commitUpdates(){
   uint64_t timestamp = (pendingUpdates.timestampPending) ? pendingUpdates.timestamp : getLocalTimestamp();  // set a new time or update the current one
   if(pendingUpdates.DSTPending){
     timestamp += pendingUpdates.DST - _DSTOffsetSecs; // replace DST offset with incoming offset
@@ -274,12 +276,13 @@ QUICK_DEF(bool)commitUpdates(){
     RTCConfigsStruct configs;
     configs.DST = _DSTOffsetSecs;
     configs.timezone = _timeZoneSecs;
-    return ConfigManager.setRTCConfigs(configs);
+    return _configManager->setRTCConfigs(configs);
   }
   return res;
 }
 
-QUICK_DEF(void)resetDatetime(){
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
+void RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::resetDatetime(){
   datetime.date = 0;
   datetime.dayOfWeek = 0;
   datetime.hours = 0;
@@ -290,14 +293,15 @@ QUICK_DEF(void)resetDatetime(){
 }
 
 #ifdef USE_BCD_TIME
-QUICK_DEF(BCDTimeStruct)getBCDTime(){
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
+BCDTimeStruct RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::getBCDTime(){
   BCDTime.readReady = false;
   transmitByte(0);
 
-  Wire.requestFrom(CLOCK_ADDRESS, 3);
-  uint8_t seconds = Wire.read();
-  uint8_t minutes = Wire.read();
-  uint8_t hours = Wire.read();
+  _wire->requestFrom(CLOCK_ADDRESS, 3);
+  uint8_t seconds = _wire->read();
+  uint8_t minutes = _wire->read();
+  uint8_t hours = _wire->read();
 
   uint8_t hoursMask = 0b00111111;
   if(hours & 0b01000000){
@@ -316,15 +320,16 @@ QUICK_DEF(BCDTimeStruct)getBCDTime(){
   return BCDTime;
 }
 
-QUICK_DEF(BCDDateStruct)getBCDDate(){
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
+BCDDateStruct RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::getBCDDate(){
   BCDDate.readReady = false;
   transmitByte(0x03);
 
-  Wire.requestFrom(CLOCK_ADDRESS, 4);
-  uint8_t dayOfWeek = Wire.read();
-  uint8_t date = Wire.read();
-  uint8_t month = Wire.read() & 0b01111111; // we don't need the century bit
-  uint8_t year = Wire.read();
+  _wire->requestFrom(CLOCK_ADDRESS, 4);
+  uint8_t dayOfWeek = _wire->read();
+  uint8_t date = _wire->read();
+  uint8_t month = _wire->read() & 0b01111111; // we don't need the century bit
+  uint8_t year = _wire->read();
   
   BCDDate.dayOfWeek = dayOfWeek;
   BCDDate.date_1 = date & BCDMask;
@@ -340,21 +345,26 @@ QUICK_DEF(BCDDateStruct)getBCDDate(){
 
 /* Private Class Methods */
 
-QUICK_DEF(void)fetchDatetime(){
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
+void RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::fetchDatetime(){
   resetDatetime();
   transmitByte(0);
 
-  Wire.requestFrom(CLOCK_ADDRESS, 7);
-  datetime.seconds = bcdToDec(Wire.read());
-  datetime.minutes = bcdToDec(Wire.read());
-  datetime.hours = bcdToDec(Wire.read());
-  datetime.dayOfWeek = bcdToDec(Wire.read());
-  datetime.date = bcdToDec(Wire.read());
-  datetime.month = bcdToDec(Wire.read() & 0b00011111);
-  datetime.years = bcdToDec(Wire.read()); // years since midnight 2000
+  _wire->requestFrom(CLOCK_ADDRESS, 13);
+  datetime.seconds = bcdToDec(_wire->read());
+  datetime.minutes = bcdToDec(_wire->read());
+  datetime.hours = bcdToDec(_wire->read());
+  datetime.dayOfWeek = bcdToDec(_wire->read());
+  datetime.date = bcdToDec(_wire->read());
+  datetime.month = bcdToDec(_wire->read() & 0b00011111);
+  datetime.years = bcdToDec(_wire->read()); // years since midnight 2000
+  for(int i = 8; i < 13; i++){
+    _wire->read();
+  }
 }
 
-QUICK_DEF(void)resetPendingUpdates(){
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
+void RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::resetPendingUpdates(){
   pendingUpdates.timezonePending = 0;
   pendingUpdates.timezone = 0;
   pendingUpdates.DSTPending = 0;
@@ -363,7 +373,8 @@ QUICK_DEF(void)resetPendingUpdates(){
   pendingUpdates.timestamp = 0;
 }
 
-QUICK_DEF(bool)transmitDatetime(){
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
+bool RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::transmitDatetime(){
   bool anyErrors = 0;
   anyErrors |= !transmit2Bytes(0x00, decToBcd(datetime.seconds));
   anyErrors |= !transmit2Bytes(0x01, decToBcd(datetime.minutes));
@@ -376,7 +387,8 @@ QUICK_DEF(bool)transmitDatetime(){
   return !anyErrors;
 }
 
-QUICK_DEF(void)setTo24hr(){
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
+void RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::setTo24hr(){
   uint8_t hours_register;
   fetchDatetime();  // get the time right now
   hours_register = decToBcd(datetime.hours);  // convert datetime.hours back into its register format
@@ -397,20 +409,22 @@ QUICK_DEF(void)setTo24hr(){
   }
 }
 
-QUICK_DEF(bool)transmitByte(uint8_t registerAddress){
-  Wire.beginTransmission(CLOCK_ADDRESS);
-  Wire.write(registerAddress);
-  if(Wire.endTransmission() != 0){
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
+bool RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::transmitByte(uint8_t registerAddress){
+  _wire->beginTransmission(CLOCK_ADDRESS);
+  _wire->write(registerAddress);
+  if(_wire->endTransmission() != 0){
     return false;
   }
   return true;
 }
 
-QUICK_DEF(bool)transmit2Bytes(uint8_t registerAddress, uint8_t value){
-  Wire.beginTransmission(CLOCK_ADDRESS);
-  Wire.write(registerAddress);
-  Wire.write(value);
-  if(Wire.endTransmission() != 0){
+template <typename WireClassDependancy, typename ConfigManagerDependancy>
+bool RTCInterfaceClass<WireClassDependancy, ConfigManagerDependancy>::transmit2Bytes(uint8_t registerAddress, uint8_t value){
+  _wire->beginTransmission(CLOCK_ADDRESS);
+  _wire->write(registerAddress);
+  _wire->write(value);
+  if(_wire->endTransmission() != 0){
     return false;
   }
   return true;
