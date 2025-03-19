@@ -27,6 +27,7 @@ struct PendingUpdatesStruct{
 struct RTCConfigsStruct{
    int32_t timezone = 0;  // timezone offset in seconds
    uint16_t DST = 0;      // daylight savings offset in seconds
+   uint32_t maxSecondsBetweenSyncs = 60*60*24; // maximum time until a new sync is required
 };
 
 enum class SquareWaveFrequencies: uint8_t {
