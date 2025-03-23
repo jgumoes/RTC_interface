@@ -1,6 +1,8 @@
 #ifndef __HELPERS_H__
 #define __HELPERS_H__
 
+#include <Arduino.h>
+
 #define ONES(decimal) ((decimal) % 10)
 #define TENS(decimal) ((decimal) / 10)
 
